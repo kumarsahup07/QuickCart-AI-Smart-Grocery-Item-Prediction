@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickCart AI — Smart Grocery & Item Prediction</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="light-theme">
+  <!-- Top Banner -->
+  <div class="top-announcement">
+    <span> Instant Delivery in 10-15 Minutes • FREE Delivery on orders above ₹199</span>
+  </div>
+
+  <!-- Main Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="nav-left">
+        <a href="#" class="brand-logo">
+          <span class="logo-icon">🛒</span>
+          <div class="brand-text">
+            <span class="brand-name">QuickCart<span class="brand-ai">AI</span></span>
+            <span class="brand-tagline">Smart Recommendations</span>
+          </div>
+        </a>
+
+        <div class="delivery-address-pill">
+          <span class="pin-icon">📍</span>
+          <div class="address-details">
+            <span class="delivery-label">Delivering to <strong>Home</strong></span>
+            <span class="address-text">Indiranagar, Bengaluru • 10 mins</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semantic Search Bar -->
+      <div class="search-wrapper">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search Indian groceries (e.g. 'kadak chai', 'dal chawal', 'maggi midnight snack')..." 
+            autocomplete="off"
+          >
+          <button id="clearSearchBtn" class="clear-search-btn" title="Clear search">✕</button>
+        </div>
+      </div>
+
+      <!-- Navigation Actions -->
+      <div class="nav-right">
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" class="nav-action-btn theme-toggle" title="Toggle Dark/Light Mode">
+          <span class="theme-icon">🌙</span>
+        </button>
+
+        <!-- Cart Trigger Button -->
+        <button id="cartToggleBtn" class="cart-btn">
+          <div class="cart-icon-wrapper">
+            <span class="cart-icon">🛍️</span>
+            <span id="cartBadgeCount" class="cart-badge">0</span>
+          </div>
+          <div class="cart-btn-text">
+            <span class="cart-label">My Cart</span>
+            <span id="cartTotalHeader" class="cart-amount">₹0.00</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero & AI Demo Banner -->
+  <section class="hero-section">
+    <div class="hero-container">
+      <div class="hero-content">
+        <div class="ai-badge">
+          <span class="sparkle">✨</span> Vector Embedding Recommender
+        </div>
+        <h1 class="hero-title">Order Chai Patti, We Predict The Parle-G & Rusk!</h1>
+        <p class="hero-subtitle">
+          Experience real-time AI basket predictions. Add any Indian grocery staple to your cart and our vector similarity model immediately suggests complementary pairings households frequently order together.
+        </p>
+
+        <!-- Interactive Demo Chips -->
+        <div class="demo-chips-container">
+          <span class="chips-label">Try instant recommendation:</span>
+          <div class="chips-row">
+            <button class="demo-chip" data-item="item_tata_tea">☕ Chai Patti → Milk & Parle-G</button>
+            <button class="demo-chip" data-item="item_pav_bread">🍞 Pav & Bread → Amul Butter & Eggs</button>
+            <button class="demo-chip" data-item="item_maggi_noodles">🍜 Maggi → Cheese Slices & Butter</button>
+            <button class="demo-chip" data-item="item_toor_dal">🍲 Toor Dal → Basmati Rice & Ghee</button>
+            <button class="demo-chip" data-item="item_amul_paneer">🧀 Malai Paneer → Garam Masala & Butter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Dynamic "Frequently Bought Together" Recommendation Banner -->
+  <section id="recommendationBanner" class="recommendation-banner hidden">
+    <div class="rec-banner-container">
+      <div class="rec-banner-header">
+        <div class="rec-title-wrap">
+          <span class="rec-icon">⚡</span>
+          <div>
+            <h3 id="recBannerTitle" class="rec-title">Frequently Bought Together</h3>
+            <p id="recBannerSubtitle" class="rec-subtitle">AI recommended complementary items for your selection</p>
+          </div>
+        </div>
+        <button id="closeRecBannerBtn" class="close-rec-btn" title="Dismiss">✕</button>
+      </div>
+      <div id="recBannerCards" class="rec-banner-cards">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Pills Filter Bar -->
+  <div class="categories-bar">
+    <div class="categories-container" id="categoryTabs">
+      <button class="category-pill active" data-category="all" id="allCategoryPill">All Items</button>
+      <button class="category-pill" data-category="Dairy, Bread & Eggs">🥛 Dairy, Bread & Eggs</button>
+      <button class="category-pill" data-category="Atta, Rice & Dals">🌾 Atta, Rice & Dals</button>
+      <button class="category-pill" data-category="Tea, Coffee & Beverages">☕ Tea, Coffee & Beverages</button>
+      <button class="category-pill" data-category="Snacks & Munchies">🍿 Snacks & Munchies</button>
+      <button class="category-pill" data-category="Masalas & Spices">🌶️ Masalas & Spices</button>
+      <button class="category-pill" data-category="Breakfast & Instant Foods">🥞 Breakfast & Instant Foods</button>
+    </div>
+  </div>
+
+  <!-- Main Product Catalog Section -->
+  <main class="catalog-section">
+    <div class="catalog-container">
+      <div class="catalog-header">
+        <div class="catalog-title-wrap">
+          <h2 id="currentCategoryTitle" class="catalog-title">All Grocery & Supermarket Items</h2>
+          <span id="catalogCountBadge" class="catalog-count-badge">24 items</span>
+        </div>
+        <div class="catalog-filters">
+          <label for="sortSelect" class="sort-label">Sort by:</label>
+          <select id="sortSelect" class="sort-select">
+            <option value="default">Featured</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="rating">Highest Rated</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div id="productGrid" class="product-grid">
+        <!-- Rendered dynamically via app.js -->
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading catalog and vector embeddings...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Slide-Over Shopping Cart Drawer -->
+  <div id="cartDrawerOverlay" class="cart-overlay hidden"></div>
+  <aside id="cartDrawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+      <div class="cart-drawer-title-wrap">
+        <h3>Shopping Cart</h3>
+        <span id="cartItemCountHeader" class="cart-item-count">0 items</span>
+      </div>
+      <button id="closeCartBtn" class="close-cart-btn" title="Close cart">✕</button>
+    </div>
+
+    <!-- Free Delivery Progress Bar -->
+    <div class="delivery-progress-wrap">
+      <div class="delivery-progress-text">
+        <span id="deliveryProgressMsg">Add ₹199.00 more for <strong>FREE Delivery</strong></span>
+      </div>
+      <div class="progress-bar-bg">
+        <div id="deliveryProgressBar" class="progress-bar-fill" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <!-- Cart Items Scroll Area -->
+    <div class="cart-drawer-body">
+      <div id="cartEmptyState" class="cart-empty-state">
+        <span class="empty-icon">🛒</span>
+        <h4>Your cart is empty</h4>
+        <p>Browse our items above. When you add Chai Patti, you'll see Parle-G & Rusk recommended right here!</p>
+      </div>
+
+      <div id="cartItemsList" class="cart-items-list">
+        <!-- Dynamic cart items -->
+      </div>
+
+      <!-- AI Basket Completion / Recommendations in Cart -->
+      <div id="cartRecommendationsSection" class="cart-rec-section hidden">
+        <div class="cart-rec-header">
+          <span class="sparkle-icon">✨</span>
+          <div>
+            <h4>Complete Your Basket</h4>
+            <p>Smart pairings based on what's in your cart</p>
+          </div>
+        </div>
+        <div id="cartRecCards" class="cart-rec-cards">
+          <!-- Dynamically injected cart recommendations -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Cart Footer & Bill Breakdown -->
+    <div class="cart-drawer-footer">
+      <div class="bill-summary">
+        <div class="bill-row">
+          <span>Items Subtotal</span>
+          <span id="cartSubtotal">₹0.00</span>
+        </div>
+        <div class="bill-row">
+          <span>Delivery Fee</span>
+          <span id="cartDeliveryFee">₹30.00</span>
+        </div>
+        <div class="bill-row discount-row" id="cartDiscountRow">
+          <span>AI Smart Saver Discount</span>
+          <span id="cartDiscount">-₹50.00</span>
+        </div>
+        <div class="bill-row total-row">
+          <span>Total To Pay</span>
+          <span id="cartGrandTotal">₹0.00</span>
+        </div>
+      </div>
+
+      <button id="checkoutBtn" class="checkout-btn" disabled>
+        <span>Proceed to Checkout</span>
+        <span id="checkoutBtnAmount">₹0.00</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Product Detail & AI Similarity Inspector Modal -->
+  <div id="productModalOverlay" class="modal-overlay hidden">
+    <div class="product-modal">
+      <button id="closeModalBtn" class="close-modal-btn">✕</button>
+      <div class="modal-grid">
+        <div class="modal-left">
+          <img id="modalProductImg" src="" alt="Product image" class="modal-img">
+          <span id="modalProductBadge" class="modal-badge">Bestseller</span>
+        </div>
+        <div class="modal-right">
+          <span id="modalCategory" class="modal-category">Category</span>
+          <h2 id="modalTitle" class="modal-title">Product Title</h2>
+          <div class="modal-rating-row">
+            <span id="modalRating" class="modal-rating">⭐ 4.8</span>
+            <span id="modalUnit" class="modal-unit">400g</span>
+          </div>
+          <div class="modal-price-row">
+            <span id="modalPrice" class="modal-price">₹0.00</span>
+          </div>
+          <p id="modalDescription" class="modal-desc">Description</p>
+
+          <!-- Add to Cart in Modal -->
+          <div class="modal-action-row">
+            <button id="modalAddToCartBtn" class="modal-add-btn">+ Add to Cart</button>
+          </div>
+
+          <!-- Semantic Embeddings Recommendations Section -->
+          <div class="modal-pairing-section">
+            <div class="modal-pairing-header">
+              <span class="sparkle">✨</span>
+              <h4>Frequently Bought Together (Vector Similarity)</h4>
+            </div>
+            <div id="modalPairingsList" class="modal-pairings-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Success Celebration Modal -->
+  <div id="orderSuccessModalOverlay" class="modal-overlay hidden">
+    <div class="order-success-modal">
+      <div class="success-animation">
+        <div class="checkmark-circle">
+          <span class="checkmark">✓</span>
+        </div>
+      </div>
+      <h2>Order Placed Successfully!</h2>
+      <p class="order-id-text">Order ID: <strong id="orderIdText">#QC-92841</strong></p>
+
+      <!-- Live Delivery Tracker Simulation -->
+      <div class="tracker-box">
+        <div class="tracker-header">
+          <span class="pulse-dot"></span>
+          <span>Arriving in <strong>10-12 minutes</strong></span>
+        </div>
+        <div class="tracker-steps">
+          <div class="step completed">
+            <span class="step-dot">✓</span>
+            <span class="step-label">Order Confirmed</span>
+          </div>
+          <div class="step active">
+            <span class="step-dot">⚡</span>
+            <span class="step-label">Packing Fresh</span>
+          </div>
+          <div class="step">
+            <span class="step-dot">🛵</span>
+            <span class="step-label">Out for Delivery</span>
+          </div>
+          <div class="step">
+            <span class="step-dot">🏠</span>
+            <span class="step-label">Delivered</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="order-summary-box" id="orderSummaryBox">
+        <!-- Injected order items -->
+      </div>
+
+      <button id="continueShoppingBtn" class="continue-shopping-btn">Order More Groceries</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
