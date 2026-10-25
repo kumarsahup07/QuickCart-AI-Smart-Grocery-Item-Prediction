@@ -24,34 +24,34 @@
 ```mermaid
 flowchart TD
     subgraph Client["Frontend Layer (Client Browser)"]
-        UI["Storefront Web Interface\n(Responsive Layout)"]
-        Cart["Cart State Management\n& Slide-Over Drawer"]
+        UI["Storefront Web Interface"]
+        Cart["Cart Management & Slide-Over Drawer"]
         SearchUI["Semantic Search Interface"]
     end
 
     subgraph API["Backend API Layer (FastAPI & Uvicorn)"]
         Router["FastAPI Application Router"]
-        EP1["GET /api/items\n(Catalog)"]
-        EP2["GET /api/recommend/{item_id}\n(Single Item Pairings)"]
-        EP3["POST /api/recommend/cart\n(Cart Centroid Recommender)"]
-        EP4["GET /api/search?q={query}\n(Semantic Search)"]
+        EP1["GET /api/items"]
+        EP2["GET /api/recommend/:item_id"]
+        EP3["POST /api/recommend/cart"]
+        EP4["GET /api/search?q=:query"]
     end
 
-    subgraph RecEngine["Recommendation & Intelligence Engine (ItemService)"]
-        TextBuilder["Semantic Text Processor\n(Name, Category, Description, Pairing)"]
-        CentroidCalc["Basket Centroid Aggregator\nC_basket = (1/k) * Σ e_j"]
-        CosineCalc["Cosine Similarity Engine\ncos(θ) = (u · v) / (||u|| ||v||)"]
+    subgraph RecEngine["Recommendation Engine (ItemService)"]
+        TextBuilder["Semantic Text Processor"]
+        CentroidCalc["Basket Centroid Aggregator"]
+        CosineCalc["Cosine Similarity Engine"]
         RuleExplainer["Pairing Rule & Reason Generator"]
     end
 
-    subgraph Vectors["Embedding & Caching Layer (OpenAIEmbeddingModel)"]
+    subgraph Vectors["Embedding & Caching Layer"]
         CacheCheck{"Cache Hit?"}
-        DiskCache[("Local Disk Cache\nembeddings_cache.json\n(<0.05s Startup)")]
-        OpenAI["OpenAI Embeddings API\ntext-embedding-3-small\n(1536 Dimensions)"]
+        DiskCache[("Local Disk Cache (embeddings_cache.json)")]
+        OpenAI["OpenAI Embeddings API (text-embedding-3-small)"]
     end
 
     subgraph Storage["Catalog Data Store"]
-        ItemsJSON[("Product Catalog\nitems.json")]
+        ItemsJSON[("Product Catalog (items.json)")]
     end
 
     UI --> Router
@@ -67,14 +67,16 @@ flowchart TD
     ItemsJSON --> TextBuilder
     TextBuilder --> Vectors
     Vectors --> CacheCheck
-    CacheCheck -- "Yes (Cached)" --> DiskCache
-    CacheCheck -- "No (Cold Start)" --> OpenAI
-    OpenAI -.-> "Persist Cache" DiskCache
+    CacheCheck -->|Yes, Cached| DiskCache
+    CacheCheck -->|No, Cold Start| OpenAI
+    OpenAI -.->|Persist Cache| DiskCache
 
     EP2 --> CosineCalc
-    EP3 --> CentroidCalc --> CosineCalc
+    EP3 --> CentroidCalc
+    CentroidCalc --> CosineCalc
     EP4 --> CosineCalc
-    CosineCalc --> RuleExplainer --> Router
+    CosineCalc --> RuleExplainer
+    RuleExplainer --> Router
 
     classDef clientStyle fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0369a1;
     classDef apiStyle fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#92400e;
