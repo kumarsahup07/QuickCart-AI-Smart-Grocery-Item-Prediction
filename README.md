@@ -134,20 +134,46 @@ $$\text{Score}(c) = \text{Cosine Similarity}(\mathbf{C}_{\text{basket}}, \mathbf
 
 ---
 
+## OpenAI API Key Usage & Caching Architecture
+
+### Why the OpenAI API Key is Required
+The `OPENAI_API_KEY` environment variable is used by OpenAI's `text-embedding-3-small` model to convert unstructured product descriptions and natural language queries into 1536-dimensional numerical vectors:
+
+1. **Semantic Vector Embeddings**:
+   - Maps each product's metadata (Name, Category, Description, and Pairing context) into dense numerical coordinates in a shared semantic vector space.
+   - Enables cosine similarity and basket centroid distance metrics to accurately detect complementary purchasing affinities.
+
+2. **Real-Time Natural Language Semantic Search (`/api/search?q=...`)**:
+   - Converts conversational or conceptual user queries (e.g., *"spicy snack for evening tea"*, *"midnight comfort food"*, or *"healthy breakfast grains"*) into query vectors on the fly, matching items by contextual intent rather than rigid keyword matching.
+
+3. **Incremental Catalog Expansion**:
+   - When new items are added to `items.json` that are not already present in the disk cache, the system automatically calls the OpenAI API to embed and persist them.
+
+### Zero-Cost Caching Strategy
+- **Pre-Warmed Disk Cache (`embeddings_cache.json`)**: All 1,060 grocery products are pre-computed and persisted to disk.
+- **No Recurring API Calls for Browsing or Cart Recommendations**: Single-item pairings and multi-item basket centroid aggregations are calculated **100% locally** in Python memory in `<0.05ms`, incurring zero recurring API usage or latency.
+- **Resilient Fallback**: If the server runs without an active `OPENAI_API_KEY`, the application boots successfully from disk cache to serve all catalog items and cart recommendations, with semantic search gracefully falling back to multi-token keyword matching.
+
+---
+
 ## Project Structure
 
 ```text
-itemprediction/
+QuickCart-AI/
 ├── .env                              # OpenAI API Key configuration
+├── .gitignore                        # Git version control exclusions
 ├── requirements.txt                  # Python dependencies (FastAPI, Uvicorn, OpenAI, Dotenv)
-├── README.md                         # Project documentation and specifications
-├── items.json                        # Catalog items with metadata, images, and pairing descriptions
-├── main.py                           # Application entry point (FastAPI server / CLI runner)
+├── README.md                         # Technical specifications and documentation
+├── items.json                        # 1,060 Indian catalog items with rich metadata and pairing data
+├── app.py                            # Production ASGI entrypoint (uvicorn app:app)
+├── main.py                           # Local runner script (FastAPI server / CLI runner)
+├── render.yaml                       # Cloud deployment specification for Render
 ├── src/
-│   ├── embedding_model.py            # OpenAI embedding model client with disk caching
-│   ├── item_service.py               # Vector similarity search and basket recommender
-│   ├── main.py                       # FastAPI application definition and endpoint routing
-│   └── embeddings_cache.json         # Pre-computed embeddings cache
+│   ├── embedding_model.py            # OpenAI client with disk-backed cache management
+│   ├── item_service.py               # Vector similarity search and basket centroid recommender
+│   ├── main.py                       # FastAPI application definition and endpoint router
+│   ├── items.json                    # Synchronized catalog data store
+│   └── embeddings_cache.json         # Pre-computed 1536-dim vector embeddings cache
 └── frontend/
     ├── index.html                    # Storefront interface layout
     ├── styles.css                    # Interface styling and theme definitions
@@ -160,7 +186,7 @@ itemprediction/
 
 ### Prerequisites
 - Python 3.10+
-- OpenAI API Key configured in `.env`
+- OpenAI API Key configured in `.env` (optional for local browsing, required for semantic search)
 
 ### Windows (PowerShell)
 
